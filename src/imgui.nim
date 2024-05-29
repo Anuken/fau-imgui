@@ -30,10 +30,9 @@ type
     Size*: cint
     Capacity*: cint
     Data*: ptr ptr cschar
-when not defined(cpp) or defined(cimguiDLL):
-  type ImDrawIdx* = uint16
-else:
-  type ImDrawIdx* = uint32
+
+type ImDrawIdx* = uint16
+
 ## Tentative workaround [end]
 
 proc currentSourceDir(): string {.compileTime.} =
@@ -50,7 +49,7 @@ template compileCpp(file: string, name: string) =
 
   static:
     if not fileExists(objectPath):
-      echo staticExec("g++ -c imgui/private/cimgui/" & file & " -o " & objectPath)
+      echo staticExec("g++ -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/private/cimgui/" & file & " -o " & objectPath)
 
   {.passL: objectPath.}
 

@@ -6,6 +6,15 @@ var somefloat: float32 = 0.0f
 var counter: int32 = 0
 
 proc init() =
+  let version = igGetVersion()
+
+  echo version
+
+  igDebugCheckVersionAndDataLayout(version, ImGuiIO.sizeof().uint32,
+                                  ImGuiStyle.sizeof().uint32, ImVec2.sizeof().uint32,
+                                  ImVec4.sizeof().uint32, ImDrawVert.sizeof().uint32,
+                                  ImDrawIdx.sizeof().uint32).assert()
+                                  
   imguiInitFau()
 
   igStyleColorsCherry()
@@ -16,7 +25,6 @@ proc run() =
   
   if keyEscape.tapped:
     quitApp()
-
 
   if show_demo:
     igShowDemoWindow(show_demo.addr)

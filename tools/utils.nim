@@ -33,10 +33,9 @@ type
     Size*: cint
     Capacity*: cint
     Data*: ptr ptr cschar
-when not defined(cpp) or defined(cimguiDLL):
-  type ImDrawIdx* = uint16
-else:
-  type ImDrawIdx* = uint32
+
+type ImDrawIdx* = uint16
+
 ## Tentative workaround [end]
 
 proc currentSourceDir(): string {.compileTime.} =

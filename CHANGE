@@ -1,1 +1,0 @@
-Change `cuchar` to `uint8`, since Nim 1.5 marks it as deprecated

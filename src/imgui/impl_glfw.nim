@@ -11,15 +11,8 @@ import ../imgui, nimgl/glfw
 when defined(windows):
   import nimgl/glfw/native
 
-type
-  GlfwClientApi = enum
-    igGlfwClientApiUnkown
-    igGlfwClientApiOpenGl
-    igGlfwClientApiVulkan
-
 var
   gWindow: GLFWwindow
-  gClientApi = igGlfwClientApiUnkown
   gTime: float64 = 0.0f
   gMouseJustPressed: array[5, bool]
   gMouseCursors: array[ImGuiMouseCursor.high.int32 + 1, GLFWCursor]
@@ -82,7 +75,7 @@ proc igGlfwInstallCallbacks(window: GLFWwindow) =
   gPrevKeyCallback = gWindow.setKeyCallback(igGlfwKeyCallback)
   gPrevCharCallback = gWindow.setCharCallback(igGlfwCharCallback)
 
-proc igGlfwInit(window: GLFWwindow, installCallbacks: bool, clientApi: GlfwClientApi): bool =
+proc igGlfwInit(window: GLFWwindow, installCallbacks: bool): bool =
   gWindow = window
   gTime = 0.0f
 

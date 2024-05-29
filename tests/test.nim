@@ -1,78 +1,45 @@
-# Copyright 2019, NimGL contributors.
+import imgui, imgui/[impl_fau]
+import core
 
-import imgui, imgui/[impl_opengl, impl_glfw]
-import nimgl/[opengl, glfw]
+var show_demo: bool = true
+var somefloat: float32 = 0.0f
+var counter: int32 = 0
 
-proc main() =
-  assert glfwInit()
-
-  glfwWindowHint(GLFWContextVersionMajor, 4)
-  glfwWindowHint(GLFWContextVersionMinor, 1)
-  glfwWindowHint(GLFWOpenglForwardCompat, GLFW_TRUE)
-  glfwWindowHint(GLFWOpenglProfile, GLFW_OPENGL_CORE_PROFILE)
-  glfwWindowHint(GLFWResizable, GLFW_FALSE)
-
-  var w: GLFWWindow = glfwCreateWindow(1280, 720)
-  if w == nil:
-    quit(-1)
-
-  w.makeContextCurrent()
-
-  assert glInit()
-
-  let context = igCreateContext()
-  #let io = igGetIO()
-
-  assert igGlfwInitForOpenGL(w, true)
-  assert igOpenGL3Init()
+proc init() =
+  imguiInitFau()
 
   igStyleColorsCherry()
 
-  var show_demo: bool = true
-  var somefloat: float32 = 0.0f
-  var counter: int32 = 0
+proc run() =
 
-  while not w.windowShouldClose:
-    glfwPollEvents()
+  fillPoly(fau.size/2f, 3, 100f)
+  
+  if keyEscape.tapped:
+    quitApp()
 
-    igOpenGL3NewFrame()
-    igGlfwNewFrame()
-    igNewFrame()
 
-    if show_demo:
-      igShowDemoWindow(show_demo.addr)
+  if show_demo:
+    igShowDemoWindow(show_demo.addr)
 
-    # Simple window
-    igBegin("Hello, world!")
+  # Simple window
+  igBegin("Hello, world!")
 
-    igText("This is some useful text.")
-    igCheckbox("Demo Window", show_demo.addr)
+  igText("This is some useful text.")
+  igCheckbox("Demo Window", show_demo.addr)
 
-    igSliderFloat("float", somefloat.addr, 0.0f, 1.0f)
+  igSliderFloat("float", somefloat.addr, 0.0f, 1.0f)
 
-    if igButton("Button", ImVec2(x: 0, y: 0)):
-      counter.inc
-    igSameLine()
-    igText("counter = %d", counter)
+  if igButton("Button", ImVec2(x: 0, y: 0)):
+    counter.inc
+  igSameLine()
+  igText("counter = %d", counter)
 
-    igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().framerate, igGetIO().framerate)
-    igEnd()
-    # End simple window
+  igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().framerate, igGetIO().framerate)
+  igEnd()
+  # End simple window
 
-    igRender()
+  igRender()
 
-    glClearColor(0.45f, 0.55f, 0.60f, 1.00f)
-    glClear(GL_COLOR_BUFFER_BIT)
+  imguiRenderFau()
 
-    igOpenGL3RenderDrawData(igGetDrawData())
-
-    w.swapBuffers()
-
-  igOpenGL3Shutdown()
-  igGlfwShutdown()
-  context.igDestroyContext()
-
-  w.destroyWindow()
-  glfwTerminate()
-
-main()
+initFau(run, init, initParams())

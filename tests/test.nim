@@ -8,7 +8,7 @@ var counter: int32 = 0
 proc init() =
   let version = igGetVersion()
 
-  echo version
+  echo "ImGUI version: ", version
 
   igDebugCheckVersionAndDataLayout(version, ImGuiIO.sizeof().uint32,
                                   ImGuiStyle.sizeof().uint32, ImVec2.sizeof().uint32,
@@ -20,14 +20,12 @@ proc init() =
   igStyleColorsCherry()
 
 proc run() =
-
-  imguiUpdateFau()
+  drawMat(ortho(fau.size))
 
   fillPoly(fau.size/2f, 3, 100f)
   
   if keyEscape.tapped:
     quitApp()
-
 
   if show_demo:
     igShowDemoWindow(show_demo.addr)
@@ -48,8 +46,6 @@ proc run() =
   igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().framerate, igGetIO().framerate)
   igEnd()
   # End simple window
-
-  igRender()
 
   imguiRenderFau()
 

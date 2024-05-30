@@ -12,7 +12,6 @@ type IVert = object
   color: Color
 
 var
-  mouseCursors: array[ImGuiMouseCursor.high.int32 + 1, Cursor]
   fontTexture: Texture
   mesh: Mesh[IVert]
   shader: Shader
@@ -114,7 +113,7 @@ proc createRenderer() =
   
   io.fonts.getTexDataAsRGBA32(pixels.addr, width.addr, height.addr)
   fontTexture = loadTexturePtr(vec2i(width, height), pixels, filter = tfLinear)
-  io.fonts.texID = cast[ImTextureID](fontTexture.handle)
+  io.fonts.texID = fontTexture.addr
 
   shader = newShader(
     """
@@ -145,49 +144,6 @@ proc createRenderer() =
 
   mesh = newMesh[IVert](update = false, indexed = true)
 
-proc imguiInitFau* =
-  let context = igCreateContext()
-  let io = igGetIO()
-
-  io.backendFlags = (io.backendFlags.int32 or ImGuiBackendFlags.HasMouseCursors.int32).ImGuiBackendFlags
-
-  cursors[ImGuiMouseCursor.Arrow.int] = newCursor(cursorArrow)
-  cursors[ImGuiMouseCursor.TextInput.int] = newCursor(cursorIbeam)
-  cursors[ImGuiMouseCursor.ResizeNS.int] = newCursor(cursorResizeV)
-  cursors[ImGuiMouseCursor.ResizeEW.int] = newCursor(cursorResizeH)
-  cursors[ImGuiMouseCursor.Hand.int] = newCursor(cursorHand)
-  cursors[ImGuiMouseCursor.ResizeAll.int] = newCursor(cursorResizeAll)
-  cursors[ImGuiMouseCursor.ResizeNESW.int] = newCursor(cursorResizeNesw)
-  cursors[ImGuiMouseCursor.ResizeNWSE.int] = newCursor(cursorResizeNwse)
-  cursors[ImGuiMouseCursor.NotAllowed.int] = newCursor(cursorNotAllowed)
-
-  createRenderer()
-
-  io.setClipboardTextFn = igGlfwSetClipboardText
-  io.getClipboardTextFn = igGlfwGetClipboardText
-
-  addFauListener do(e: FauEvent):
-    case e.kind:
-    of feKey:
-      let mapped = mapKey(e.key)
-      #TODO
-      if mapped != ImGuiKey.None:
-        io.addKeyEvent(mapped, e.keyDown)
-    of feText:
-      io.addInputCharacter(e.text)
-    of feTouch:
-      if e.touchButton in {keyMouseLeft, keyMouseRight, keyMouseMiddle}:
-        let code = case e.touchButton:
-        of keyMouseLeft: ImGuiMouseButton.Left
-        of keyMouseRight: ImGuiMouseButton.Right
-        of keyMouseMiddle: ImGuiMouseButton.Middle
-        else: ImGuiMouseButton.Left
-
-        io.addMouseButtonEvent(code.int32, e.touchDown)
-    of feScroll:
-      io.addMouseWheelEvent(e.scroll.x, e.scroll.y)
-    else: discard
-
 proc imguiUpdateFau* =
   let io = igGetIO()
 
@@ -212,9 +168,57 @@ proc imguiUpdateFau* =
 
   igNewFrame()
 
+#TODO: where to put context.igDestroyContext()?
+proc imguiInitFau* =
+  let context = igCreateContext()
+  let io = igGetIO()
+
+  io.backendFlags = (io.backendFlags.int32 or ImGuiBackendFlags.HasMouseCursors.int32).ImGuiBackendFlags
+
+  cursors[ImGuiMouseCursor.Arrow.int] = newCursor(cursorArrow)
+  cursors[ImGuiMouseCursor.TextInput.int] = newCursor(cursorIbeam)
+  cursors[ImGuiMouseCursor.ResizeNS.int] = newCursor(cursorResizeV)
+  cursors[ImGuiMouseCursor.ResizeEW.int] = newCursor(cursorResizeH)
+  cursors[ImGuiMouseCursor.Hand.int] = newCursor(cursorHand)
+  cursors[ImGuiMouseCursor.ResizeAll.int] = newCursor(cursorResizeAll)
+  cursors[ImGuiMouseCursor.ResizeNESW.int] = newCursor(cursorResizeNesw)
+  cursors[ImGuiMouseCursor.ResizeNWSE.int] = newCursor(cursorResizeNwse)
+  cursors[ImGuiMouseCursor.NotAllowed.int] = newCursor(cursorNotAllowed)
+
+  createRenderer()
+
+  io.setClipboardTextFn = igGlfwSetClipboardText
+  io.getClipboardTextFn = igGlfwGetClipboardText
+
+  addFauListener do(e: FauEvent):
+    case e.kind:
+    of feFrame:
+      imguiUpdateFau()
+    of feKey:
+      let mapped = mapKey(e.key)
+      if mapped != ImGuiKey.None:
+        io.addKeyEvent(mapped, e.keyDown)
+    of feText:
+      io.addInputCharacter(e.text)
+    of feTouch:
+      if e.touchButton in {keyMouseLeft, keyMouseRight, keyMouseMiddle}:
+        let code = case e.touchButton:
+        of keyMouseLeft: ImGuiMouseButton.Left
+        of keyMouseRight: ImGuiMouseButton.Right
+        of keyMouseMiddle: ImGuiMouseButton.Middle
+        else: ImGuiMouseButton.Left
+
+        io.addMouseButtonEvent(code.int32, e.touchDown)
+    of feScroll:
+      io.addMouseWheelEvent(e.scroll.x, e.scroll.y)
+    else: discard
+
 proc imguiRenderFau* =
-  #pending operations need to be discarded
+  #pending fau draw operations need to be flushed
   drawFlush()
+
+  #does this need to be called multiple times...? should it be moved out?
+  igRender()
 
   let 
     io = igGetIO()
@@ -222,7 +226,6 @@ proc imguiRenderFau* =
 
   data.scaleClipRects(io.displayFramebufferScale)
 
-  
   let 
     #It's flipped and I don't know why.
     matrix = ortho(data.displayPos + vec2(0f, data.displaySize.y), data.displaySize * vec2(1f, -1f))

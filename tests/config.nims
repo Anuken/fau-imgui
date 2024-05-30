@@ -1,10 +1,10 @@
 switch("path", "$projectDir/../src")
+#TODO: change to actual proper path...
 --path:"../../Infernae/fau/src"
 
 switch("gcc.linkerexe", "g++")
 
 when defined(Windows):
-  #TODO does this work? needed for tlsEmulation:off
   --l:"-static"
 
   switch("passL", "-static-libstdc++ -static-libgcc")

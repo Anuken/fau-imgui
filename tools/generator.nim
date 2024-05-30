@@ -195,8 +195,7 @@ proc genTypeDefs(output: var string) =
                      "ImU64", "ImBitArrayForNamedKeys"]
     if obj.getStr().startsWith("struct") or enums.contains(name) or ignorable.contains(name):
       continue
-    if name == "ImDrawIdx": # delete and define in "utils.nim"
-      continue
+
     output.add("  {name}* = {obj.getStr().translateType()}\n".fmt)
 
 proc genTypes(output: var string) =
@@ -411,17 +410,6 @@ proc genProcs(output: var string) =
 
   output.add("\n{postProcs}\n".fmt)
 
-proc fixAfter(fname:string) = discard
-  #var s:seq[string]
-  #for line in fname.lines:
-  #  var st = line
-  #  if line.contains(peg"'ImDrawIdx*' \s* '=' \s* 'uint16'"):
-  #    st = line.replacef(peg"{@'ImDrawIdx*' \s*} '=' \s* 'uint16'","$1= uint32")
-  #  #
-  #  s.add st
-  ## write result
-  #writeFile(fname,s.join("\n"))
-
 proc igGenerate*() =
   var output = srcHeader
 
@@ -432,7 +420,6 @@ proc igGenerate*() =
   output.add("\n" & cherryTheme)
 
   writeFile("src/imgui.nim", output)
-  fixAfter("src/imgui.nim")
 
 when isMainModule:
   igGenerate()

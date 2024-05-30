@@ -1,48 +1,42 @@
-# Written by Leonardo Mariscal <leo@ldmd.mx>, 2019
 
+## Originally Written by Leonardo Mariscal <leo@ldmd.mx>, 2019
+## 
+## Updated to ImGUI 1.90.7 with the help of code from <https://github.com/nimgl/imgui/pull/10>
+## 
 ## ImGUI Bindings
 ## ====
-## WARNING: This is a generated file. Do not edit
+## WARNING: This is a generated file. Do not edit.
 ## Any edits will be overwritten by the generator.
 ##
 ## The aim is to achieve as much compatibility with C as possible.
-## Optional helper functions have been created as a submodule
-## ``imgui/imgui_helpers`` to better bind this library to Nim.
 ##
 ## You can check the original documentation `here <https://github.com/ocornut/imgui/blob/master/imgui.cpp>`_.
 ##
-## Source language of ImGui is C++, since Nim is able to compile both to C
-## and C++ you can select which compile target you wish to use. Note that to use
-## the C backend you must supply a `cimgui <https://github.com/cimgui/cimgui>`_
-## dynamic library file.
-##
-## HACK: If you are targeting Windows, be sure to compile the cimgui dll with
-## visual studio and not with mingw.
 
 import std/[compilesettings, strformat, strutils, os]
 
 ## Tentative workaround [start]
 type
   uint32Ptr* = ptr uint32
-  Imguidockrequest* = distinct object
+  ImguiDockRequest* = distinct object
   ImGuiDockNodeSettings* = distinct object
   const_cstringPtr* {.pure, inheritable, bycopy.} = object
     Size*: cint
     Capacity*: cint
     Data*: ptr ptr cschar
 
-type ImDrawIdx* = uint16
+#type ImDrawIdx* = uint16
 
 ## Tentative workaround [end]
+
+const
+  nimcache = querySetting(SingleValueSetting.nimcacheDir)
 
 proc currentSourceDir(): string {.compileTime.} =
   result = currentSourcePath().replace("\\", "/")
   result = result[0 ..< result.rfind("/")]
 
 {.passC: "-I" & currentSourceDir() & "/imgui/private/cimgui" & " -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1".}
-
-const
-  nimcache = querySetting(SingleValueSetting.nimcacheDir)
 
 template compileCpp(file: string, name: string) =
   const objectPath = nimcache & "/" & name & ".cpp.o"
@@ -1071,6 +1065,7 @@ const ImGuiKey_NamedKey_BEGIN* = 512
 type
   ImBitArrayPtr* = ptr uint32
   ImDrawCallback* = proc(parent_list: ptr ImDrawList, cmd: ptr ImDrawCmd): void {.cdecl, varargs.}
+  ImDrawIdx* = uint16
   ImFileHandle* = ptr FILE
   ImGuiContextHookCallback* = proc(ctx: ptr ImGuiContext, hook: ptr ImGuiContextHook): void {.cdecl, varargs.}
   ImGuiErrorLogCallback* = proc(user_data: pointer, fmt: cstring): void {.cdecl.}

@@ -21,10 +21,13 @@ proc init() =
 
 proc run() =
 
+  imguiUpdateFau()
+
   fillPoly(fau.size/2f, 3, 100f)
   
   if keyEscape.tapped:
     quitApp()
+
 
   if show_demo:
     igShowDemoWindow(show_demo.addr)

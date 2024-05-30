@@ -44,21 +44,22 @@ proc currentSourceDir(): string {.compileTime.} =
 
 {.passC: "-I" & currentSourceDir() & "/imgui/private/cimgui" & " -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1".}
 
-const
-  nimcache = querySetting(SingleValueSetting.nimcacheDir)
-  cimgui = staticExec(fmt"g++ -c imgui/private/cimgui/cimgui.cpp -o {nimcache}/cimgui.cpp.o")
-  imgui = staticExec(fmt"g++ -c imgui/private/cimgui/imgui/imgui.cpp -o {nimcache}/imgui.cpp.o")
-  imguiDraw = staticExec(fmt"g++ -c imgui/private/cimgui/imgui/imgui_draw.cpp -o {nimcache}/imgui_draw.cpp.o")
-  imguiTables = staticExec(fmt"g++ -c imgui/private/cimgui/imgui/imgui_tables.cpp -o {nimcache}/imgui_tables.cpp.o")
-  imguiWidgets = staticExec(fmt"g++ -c imgui/private/cimgui/imgui/imgui_widgets.cpp -o {nimcache}/imgui_widgets.cpp.o")
-  imguiDemo = staticExec(fmt"g++ -c imgui/private/cimgui/imgui/imgui_demo.cpp -o {nimcache}/imgui_demo.cpp.o")
+template compileCpp(file: string, name: string) =
+  const objectPath = nimcache & "/" & name & ".cpp.o"
 
-{.passL: fmt"{nimcache}/cimgui.cpp.o".}
-{.passL: fmt"{nimcache}/imgui_demo.cpp.o".}
-{.passL: fmt"{nimcache}/imgui_draw.cpp.o".}
-{.passL: fmt"{nimcache}/imgui_tables.cpp.o".}
-{.passL: fmt"{nimcache}/imgui_widgets.cpp.o".}
-{.passL: fmt"{nimcache}/imgui.cpp.o".}
+  static:
+    if not fileExists(objectPath):
+      echo staticExec("g++ -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/private/cimgui/" & file & " -o " & objectPath)
+
+  {.passL: objectPath.}
+
+compileCpp("cimgui.cpp", "cimgui.cpp")
+compileCpp("imgui/imgui.cpp", "imgui.cpp")
+compileCpp("imgui/imgui_draw.cpp", "imgui_draw.cpp")
+compileCpp("imgui/imgui_tables.cpp", "imgui_tables.cpp")
+compileCpp("imgui/imgui_widgets.cpp", "imgui_widgets.cpp")
+compileCpp("imgui/imgui_demo.cpp", "imgui_demo.cpp")
+
 {.passL: "-static-libgcc -static-libstdc++".}
 {.passc: "-DCIMGUI_DEFINE_ENUMS_AND_STRUCTS".}
 {.pragma: imgui_header, header: "cimgui.h".}

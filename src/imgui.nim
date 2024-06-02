@@ -25,8 +25,6 @@ type
     Capacity*: cint
     Data*: ptr ptr cschar
 
-#type ImDrawIdx* = uint16
-
 ## Tentative workaround [end]
 
 const

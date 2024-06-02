@@ -110,6 +110,14 @@ proc createRenderer() =
     pixels: ptr uint8
     width: int32
     height: int32
+
+  when false: #just for testing fonts...
+    const testFontData = staticRead("../src/imgui/private/cimgui/imgui/misc/fonts/Roboto-Medium.ttf")
+    let fontData = testFontData
+
+    io.fonts.clear()
+    let font = io.fonts.addFontFromMemoryTTF(addr fontData[0], fontData.len.int32, 20f);
+    io.fonts.build()
   
   io.fonts.getTexDataAsRGBA32(pixels.addr, width.addr, height.addr)
   fontTexture = loadTexturePtr(vec2i(width, height), pixels, filter = tfLinear)

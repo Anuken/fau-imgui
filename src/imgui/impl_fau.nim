@@ -114,7 +114,7 @@ proc createRenderer() =
     height: int32
 
   when false: #just for testing fonts...
-    const testFontData = staticRead("../src/imgui/private/cimgui/imgui/misc/fonts/Roboto-Medium.ttf")
+    const testFontData = staticRead("../src/imgui/cimgui/imgui/misc/fonts/Roboto-Medium.ttf")
     let fontData = testFontData
 
     io.fonts.clear()

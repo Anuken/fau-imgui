@@ -137,7 +137,7 @@ proc translateType(name: string): string =
     result = "void"
 
 proc genEnums(output: var string) =
-  let file = readFile("src/imgui/private/cimgui/generator/output/structs_and_enums.json")
+  let file = readFile("src/imgui/cimgui/generator/output/structs_and_enums.json")
   let data = file.parseJson()
 
   output.add("\n# Enums\ntype\n")
@@ -184,7 +184,7 @@ proc genEnums(output: var string) =
 
 proc genTypeDefs(output: var string) =
   # Must be run after genEnums
-  let file = readFile("src/imgui/private/cimgui/generator/output/typedefs_dict.json")
+  let file = readFile("src/imgui/cimgui/generator/output/typedefs_dict.json")
   let data = file.parseJson()
 
   output.add("\n# TypeDefs\ntype\n")
@@ -201,7 +201,7 @@ proc genTypeDefs(output: var string) =
 proc genTypes(output: var string) =
   # Does not add a `type` keyword
   # Must be run after genEnums
-  let file = readFile("src/imgui/private/cimgui/generator/output/structs_and_enums.json")
+  let file = readFile("src/imgui/cimgui/generator/output/structs_and_enums.json")
   let data = file.parseJson()
 
   output.add("\n")
@@ -254,7 +254,7 @@ proc genTypes(output: var string) =
       output.add("    {arrayData[1]}* {memberImGuiName}: array[{arrayData[0]}, {member[\"type\"].getStr().translateType()}]\n".fmt)
 
 proc genProcs(output: var string) =
-  let file = readFile("src/imgui/private/cimgui/generator/output/definitions.json")
+  let file = readFile("src/imgui/cimgui/generator/output/definitions.json")
   let data = file.parseJson()
 
   output.add("\n{preProcs}\n".fmt)

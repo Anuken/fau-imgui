@@ -34,14 +34,15 @@ proc currentSourceDir(): string {.compileTime.} =
   result = currentSourcePath().replace("\\", "/")
   result = result[0 ..< result.rfind("/")]
 
-{.passC: "-I" & currentSourceDir() & "/imgui/private/cimgui" & " -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1".}
+{.passC: "-I" & currentSourceDir() & "/imgui/cimgui" & " -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1".}
 
 template compileCpp(file: string, name: string) =
   const objectPath = nimcache & "/" & name & ".cpp.o"
 
   static:
     if not fileExists(objectPath):
-      echo staticExec("g++ -std=c++14 -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/private/cimgui/" & file & " -o " & objectPath)
+      createDir(objectPath.parentDir)
+      echo staticExec("g++ -std=c++14 -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/cimgui/" & file & " -o " & objectPath)
 
   {.passL: objectPath.}
 
@@ -2708,7 +2709,7 @@ type
 
 # Procs
 {.push warning[HoleEnumConv]: off.}
-{.push nodecl, discardable,header: currentSourceDir() & "/imgui/private/cimgui/cimgui.h".}
+{.push nodecl, discardable,header: currentSourceDir() & "/imgui/cimgui/cimgui.h".}
 
 proc clearAllBits*(self: ptr uint32): void {.importc: "ImBitArray_ClearAllBits".}
 proc clearBit*(self: ptr uint32, n: int32): void {.importc: "ImBitArray_ClearBit".}

@@ -6,6 +6,8 @@ import ../imgui
 converter toImVec2(vec: Vec2): ImVec2 = cast[ImVec2](vec)
 converter toFauVec2(vec: ImVec2): Vec2 = cast[Vec2](vec)
 
+const uiScaleFactor = 1f
+
 type IVert = object
   pos: Vec2
   uv: Vec2
@@ -155,8 +157,8 @@ proc createRenderer() =
 proc imguiUpdateFau* =
   let io = igGetIO()
 
-  io.displaySize = fau.size
-  io.displayFramebufferScale = vec2(1f)
+  io.displaySize = fau.size / uiScaleFactor
+  io.displayFramebufferScale = vec2(uiScaleFactor)
 
   io.deltaTime = fau.rawDelta.float32
 
@@ -165,7 +167,7 @@ proc imguiUpdateFau* =
   io.addKeyEvent(Alt, keyLAlt.down or keyRAlt.down)
   io.addKeyEvent(Super, keyLsuper.down or keyRsuper.down)
 
-  io.addMousePosEvent(fau.mouse.x, fau.size.y - 1f - fau.mouse.y)
+  io.addMousePosEvent(fau.mouse.x/uiScaleFactor, (fau.size.y - 1f - fau.mouse.y)/uiScaleFactor)
 
   let cursor = igGetMouseCursor()
   if cursor == ImGuiMouseCursor.None or io.mouseDrawCursor:

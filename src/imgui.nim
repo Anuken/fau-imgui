@@ -41,7 +41,7 @@ template compileCpp(file: string, name: string) =
 
   static:
     if not fileExists(objectPath):
-      echo staticExec("g++ -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/private/cimgui/" & file & " -o " & objectPath)
+      echo staticExec("g++ -std=c++14 -c -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 imgui/private/cimgui/" & file & " -o " & objectPath)
 
   {.passL: objectPath.}
 
@@ -52,7 +52,6 @@ compileCpp("imgui/imgui_tables.cpp", "imgui_tables.cpp")
 compileCpp("imgui/imgui_widgets.cpp", "imgui_widgets.cpp")
 compileCpp("imgui/imgui_demo.cpp", "imgui_demo.cpp")
 
-{.passL: "-static-libgcc -static-libstdc++".}
 {.passc: "-DCIMGUI_DEFINE_ENUMS_AND_STRUCTS".}
 {.pragma: imgui_header, header: "cimgui.h".}
 

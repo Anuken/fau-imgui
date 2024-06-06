@@ -1,4 +1,4 @@
-import core
+import core, fau/assets, os
 import ../imgui
 
 #https://github.com/ocornut/imgui/blob/master/backends/imgui_impl_glfw.cpp
@@ -18,8 +18,10 @@ var
   mesh: Mesh[IVert]
   shader: Shader
   cursors: array[ImGuiMouseCursor.high.int + 1, Cursor]
+  initialized = false
 
 proc mapKey(key: KeyCode): ImGuiKey =
+  #TODO: number and numpad keys?
   return case key:
   of keyA: ImGuiKey.A
   of keyB: ImGuiKey.B
@@ -125,6 +127,7 @@ proc createRenderer() =
   fontTexture = loadTexturePtr(vec2i(width, height), pixels, filter = tfLinear)
   io.fonts.texID = fontTexture.addr
 
+  #this is basically the spritebatch shader without mixcol
   shader = newShader(
     """
     attribute vec4 a_pos;
@@ -154,7 +157,7 @@ proc createRenderer() =
 
   mesh = newMesh[IVert](update = false, indexed = true)
 
-proc imguiUpdateFau* =
+proc imguiUpdateFau =
   let io = igGetIO()
 
   io.displaySize = fau.size / uiScaleFactor
@@ -177,51 +180,6 @@ proc imguiUpdateFau* =
     setCursorHidden(false)
 
   igNewFrame()
-
-#TODO: where to put context.igDestroyContext()?
-proc imguiInitFau* =
-  let context = igCreateContext()
-  let io = igGetIO()
-
-  io.backendFlags = (io.backendFlags.int32 or ImGuiBackendFlags.HasMouseCursors.int32).ImGuiBackendFlags
-
-  cursors[ImGuiMouseCursor.Arrow.int] = newCursor(cursorArrow)
-  cursors[ImGuiMouseCursor.TextInput.int] = newCursor(cursorIbeam)
-  cursors[ImGuiMouseCursor.ResizeNS.int] = newCursor(cursorResizeV)
-  cursors[ImGuiMouseCursor.ResizeEW.int] = newCursor(cursorResizeH)
-  cursors[ImGuiMouseCursor.Hand.int] = newCursor(cursorHand)
-  cursors[ImGuiMouseCursor.ResizeAll.int] = newCursor(cursorResizeAll)
-  cursors[ImGuiMouseCursor.ResizeNESW.int] = newCursor(cursorResizeNesw)
-  cursors[ImGuiMouseCursor.ResizeNWSE.int] = newCursor(cursorResizeNwse)
-  cursors[ImGuiMouseCursor.NotAllowed.int] = newCursor(cursorNotAllowed)
-
-  createRenderer()
-
-  io.setClipboardTextFn = igGlfwSetClipboardText
-  io.getClipboardTextFn = igGlfwGetClipboardText
-
-  addFauListener do(e: FauEvent):
-    case e.kind:
-    of feFrame:
-      imguiUpdateFau()
-    of feKey:
-      let mapped = mapKey(e.key)
-      if mapped != ImGuiKey.None:
-        io.addKeyEvent(mapped, e.keyDown)
-    of feText:
-      io.addInputCharacter(e.text)
-    of feTouch:
-      if e.touchButton in {keyMouseLeft, keyMouseRight, keyMouseMiddle}:
-        let code = case e.touchButton:
-        of keyMouseLeft: ImGuiMouseButton.Left
-        of keyMouseRight: ImGuiMouseButton.Right
-        of keyMouseMiddle: ImGuiMouseButton.Middle
-        else: ImGuiMouseButton.Left
-
-        io.addMouseButtonEvent(code.int32, e.touchDown)
-    of feScroll:
-      io.addMouseWheelEvent(e.scroll.x, e.scroll.y)
-    else: discard
 
 proc imguiRenderFau* =
   #pending fau draw operations need to be flushed
@@ -276,4 +234,66 @@ proc imguiRenderFau* =
         
         indexBufferOffset += pcmd.elemCount.int
 
+proc imguiInitFau*(appName: string = "") =
+  if initialized: return
 
+  initialized = true
+
+  let context = igCreateContext()
+  let io = igGetIO()
+
+  io.backendFlags = (io.backendFlags.int32 or ImGuiBackendFlags.HasMouseCursors.int32).ImGuiBackendFlags
+  if appName == "":
+    io.iniFilename = nil
+  else:
+    let folder = getSaveDir(appName)
+
+    try:
+      folder.createDir()
+      io.iniFilename = folder / "imgui.ini"
+    except:
+      echo "Failed to create save directory: ", getCurrentExceptionMsg()
+      io.iniFilename = nil
+
+  cursors[ImGuiMouseCursor.Arrow.int] = newCursor(cursorArrow)
+  cursors[ImGuiMouseCursor.TextInput.int] = newCursor(cursorIbeam)
+  cursors[ImGuiMouseCursor.ResizeNS.int] = newCursor(cursorResizeV)
+  cursors[ImGuiMouseCursor.ResizeEW.int] = newCursor(cursorResizeH)
+  cursors[ImGuiMouseCursor.Hand.int] = newCursor(cursorHand)
+  cursors[ImGuiMouseCursor.ResizeAll.int] = newCursor(cursorResizeAll)
+  cursors[ImGuiMouseCursor.ResizeNESW.int] = newCursor(cursorResizeNesw)
+  cursors[ImGuiMouseCursor.ResizeNWSE.int] = newCursor(cursorResizeNwse)
+  cursors[ImGuiMouseCursor.NotAllowed.int] = newCursor(cursorNotAllowed)
+
+  createRenderer()
+
+  io.setClipboardTextFn = igGlfwSetClipboardText
+  io.getClipboardTextFn = igGlfwGetClipboardText
+
+  addFauListener do(e: FauEvent):
+    case e.kind:
+    of feFrame:
+      imguiUpdateFau()
+    of feEndFrame:
+      imguiRenderFau()
+    of feDestroy:
+      context.igDestroyContext()
+      initialized = false
+    of feKey:
+      let mapped = mapKey(e.key)
+      if mapped != ImGuiKey.None:
+        io.addKeyEvent(mapped, e.keyDown)
+    of feText:
+      io.addInputCharacter(e.text)
+    of feTouch:
+      if e.touchButton in {keyMouseLeft, keyMouseRight, keyMouseMiddle}:
+        let code = case e.touchButton:
+        of keyMouseLeft: ImGuiMouseButton.Left
+        of keyMouseRight: ImGuiMouseButton.Right
+        of keyMouseMiddle: ImGuiMouseButton.Middle
+        else: ImGuiMouseButton.Left
+
+        io.addMouseButtonEvent(code.int32, e.touchDown)
+    of feScroll:
+      io.addMouseWheelEvent(e.scroll.x, e.scroll.y)
+    else: discard

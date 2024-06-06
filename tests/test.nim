@@ -47,6 +47,4 @@ proc run() =
   igEnd()
   # End simple window
 
-  imguiRenderFau()
-
 initFau(run, init, initParams())
